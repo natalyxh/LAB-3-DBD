@@ -1,7 +1,7 @@
 services:
   aplicacion:
     build: .
-    container_name: app_nataly_8042
+    container_name: app_nataly_8026
     ports:
       - "8042:3000"
     env_file:
