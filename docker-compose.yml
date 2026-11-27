@@ -3,7 +3,7 @@ services:
     build: .
     container_name: app_nataly_8026
     ports:
-      - "8042:3000"
+      - "8026:3000"
     env_file:
       - .env
     restart: unless-stopped
