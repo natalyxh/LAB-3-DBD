@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión NoSQL</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+          rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container">
+        <span class="navbar-brand">Sistema de Gestión NoSQL</span>
+        <span class="text-white">MongoDB Atlas + Docker</span>
+    </div>
+</nav>
+
+<div class="container py-4">
+
+    <h3>Administración de productos</h3>
+    <p class="text-secondary">Gestión de documentos almacenados en MongoDB.</p>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 id="tituloFormulario">Registrar producto</h5>
+
+            <form id="formulario" class="row g-3">
+                <input type="hidden" id="id">
+
+                <div class="col-md-6">
+                    <label class="form-label">Nombre</label>
+                    <input id="nombre" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Categoría</label>
+                    <input id="categoria" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Precio</label>
+                    <input id="precio" type="number" min="0"
+                           step="0.01" class="form-control" required>
+                </div>
+
+                <div class="col-md-6">
+                    <label class="form-label">Stock</label>
+                    <input id="stock" type="number" min="0"
+                           step="1" class="form-control" required>
+                </div>
+
+                <div class="col-12">
+                    <button class="btn btn-primary" type="submit">
+                        Guardar producto
+                    </button>
+                    <button class="btn btn-secondary" type="button"
+                            onclick="limpiar()">
+                        Limpiar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="d-flex justify-content-between mb-3">
+                <h5>Productos registrados</h5>
+                <button class="btn btn-success btn-sm"
+                        onclick="cargarProductos()">
+                    Actualizar
+                </button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Categoría</th>
+                            <th>Precio</th>
+                            <th>Stock</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="app-footer">
+    <div class="container">
+        <span class="footer-university">Universidad de Oriente</span>
+        <span class="footer-author">Yahir Enrique Romero Flores <span>U20240873</span></span>
+    </div>
+</footer>
+
+<script>
+const API = "/api/productos";
+let lista = [];
+
+async function cargarProductos() {
+    const respuesta = await fetch(API);
+    lista = await respuesta.json();
+
+    document.getElementById("tabla").innerHTML =
+        lista.map(p => `
+        <tr>
+            <td>${escapar(p.nombre)}</td>
+            <td>${escapar(p.categoria)}</td>
+            <td>$${p.precio}</td>
+            <td>${p.stock}</td>
+            <td>
+                <button class="btn btn-warning btn-sm"
+                    onclick="editar('${p._id}')">Editar</button>
+
+                <button class="btn btn-danger btn-sm"
+                    onclick="eliminar('${p._id}')">Eliminar</button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function escapar(valor) {
+    return String(valor).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;",
+        '"': "&quot;", "'": "&#39;"
+    })[c]);
+}
+
+document.getElementById("formulario")
+.addEventListener("submit", async e => {
+    e.preventDefault();
+
+    const id = document.getElementById("id").value;
+
+    const datos = {
+        nombre: document.getElementById("nombre").value.trim(),
+        categoria: document.getElementById("categoria").value.trim(),
+        precio: Number(document.getElementById("precio").value),
+        stock: Number(document.getElementById("stock").value)
+    };
+
+    const respuesta = await fetch(
+        id ? `${API}/${id}` : API,
+        {
+            method: id ? "PUT" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(datos)
+        }
+    );
+
+    if (!respuesta.ok) {
+        alert("No se pudo guardar el producto");
+        return;
+    }
+
+    limpiar();
+    cargarProductos();
+});
+
+function editar(id) {
+    const p = lista.find(x => x._id === id);
+
+    document.getElementById("id").value = p._id;
+    document.getElementById("nombre").value = p.nombre;
+    document.getElementById("categoria").value = p.categoria;
+    document.getElementById("precio").value = p.precio;
+    document.getElementById("stock").value = p.stock;
+
+    document.getElementById("tituloFormulario").textContent =
+        "Actualizar producto";
+}
+
+async function eliminar(id) {
+    if (!confirm("¿Desea eliminar este producto?")) return;
+
+    const respuesta = await fetch(`${API}/${id}`, {
+        method: "DELETE"
+    });
+
+    if (!respuesta.ok) {
+        alert("No se pudo eliminar");
+        return;
+    }
+
+    cargarProductos();
+}
+
+function limpiar() {
+    document.getElementById("formulario").reset();
+    document.getElementById("id").value = "";
+    document.getElementById("tituloFormulario").textContent =
+        "Registrar producto";
+}
+
+cargarProductos();
+</script>
+
+</body>
+</html>
