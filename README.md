@@ -1,3 +1,3 @@
 # Proyecto Inventario - Docker + MongoDB Atlas
 **Estudiante:** Veronica Nataly Morales
-**Puerto asignado:** 8042
+**Puerto asignado:** 8026
